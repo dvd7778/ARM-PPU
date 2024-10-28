@@ -12,43 +12,33 @@ module PF3_ControlUnit_tb;
   wire [31:0]I;
   reg [31:0]data;
   
-//   //CU signals
-//   reg [31:0] instr;
-//   wire [3:0] CU_ALU_op;
-//   wire [1:0] AM;
-//   wire B_instr;
-//   wire BL_instr;
-//   wire S;
-//   wire load_instr;
-//   wire RF_enable;
-//   wire size;
-//   wire RW;
-//   wire E;
+  //CU signals
+  wire [3:0] ALU_op;
+  wire [1:0] AM;
+  wire B_instr;
+  wire BL_instr;
+  wire S;
+  wire load_instr;
+  wire RF_enable;
+  wire size;
+  wire RW;
+  wire E;
   
-//   //CU/MUX signals
-//   reg [3:0] ALU_op;
-//   reg [1:0] AM;
-//   reg B_instr, BL_instr, load_instr, RF_enable, size, RW, E;
-  
-//   //NOP signals
-//   reg [3:0] NOP_ALU_op;
-//   reg [1:0] NOP_AM;
-//   reg NOP_B_instr, NOP_BL_instr, NOP_load_instr, NOP_RF_enable, NOP_size, NOP_RW, NOP_E;
+  //CU/MUX signals
+  reg CU_MUX_S;
   
   //Adder
   wire [7:0] result;
   
-//   //Pipeline Register IF/ID
-//   output reg [24:0] I23_0;
-//   output reg [31:0] output_NextPC;
-//   output reg [3:0] I19_16;
-//   output reg [3:0] I3_0;
-//   output reg [3:0] I15_12;
-//   output reg [3:0] I31_28;
-//   output reg [12:0] I11_0;
-//   output reg [31:0] I31_0; 
-//   input [31:0] InstuctionMemoryOut, NextPC;
-//   input  Clr, Clk, E;
+  //Pipeline Register IF/ID
+  wire [23:0] I23_0;
+  wire [7:0] output_NextPC;
+  wire [3:0] I19_16;
+  wire [3:0] I3_0;
+  wire [3:0] I15_12;
+  wire [3:0] I31_28;
+  wire [11:0] I11_0;
+  wire [31:0] I31_0; 
   
 //   //Pipeline Register ID/EX
 //   reg clr;
@@ -122,9 +112,14 @@ module PF3_ControlUnit_tb;
   
   Adder adder(Q, 8'b00000100, result);
   
-//   control_unit CU (instr, ALU_op, AM, B_instr, BL_instr, S, load_instr, RF_enable, size, RW, E);
+  Pipeline_Register_IF_ID IF_ID(I, result, Clr, Clk, LE,
+                                I23_0, output_NextPC, I19_16,
+                                I3_0, I15_12, I31_28, I11_0,
+                                I31_0);
   
+  control_unit CU (I31_0, ALU_op, AM, B_instr, BL_instr, S, load_instr, RF_enable, size, RW, E);
   
+  CU_mux_2x1 CU_mux (ALU_op, AM, B_instr, BL_instr, load_instr, RF_enable, size, RW, E, 4'b0, 					  2'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, CU_MUX_S);
 //   initial begin
 //     fi = $fopen("input.txt","r");
 //     A = 7'b0;
