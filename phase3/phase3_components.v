@@ -42,6 +42,7 @@ module control_unit(
     S = 0;
     RW = 0;
     load_instr = 0;
+    RF_enable = 0;
     size = 0;
     E = 0;
       
@@ -125,6 +126,7 @@ module control_unit(
         size = instr[22];
         RW = !instr[20];
         E = 1;
+        RF_enable = 1;
        end
         
       // load and store
@@ -138,6 +140,7 @@ module control_unit(
         size = instr[22];
         RW = !instr[20];
         E = 1;
+        RF_enable = 1;
       end
         
       //  BL and B
@@ -194,7 +197,7 @@ module CU_mux_2x1(
     output reg out_B_instr, out_BL_instr, out_S ,out_load_instr, out_RF_enable, out_size, out_RW, out_E
   
 );
-  always @ (S, ALU_op, AM, B_instr, BL_instr, S, load_instr, RF_enable, size, RW, E) begin
+  always @ (ALU_op, AM, B_instr, BL_instr, S, load_instr, RF_enable, size, RW, E) begin
     if (!mux_e) begin
       out_ALU_op = ALU_op;
       out_AM = AM;
@@ -394,7 +397,7 @@ module Pipeline_Register_MEM_WB(input [31:0] DataMemoryOutput,
                                 input Clr, Clk,
                                 
                                 output reg [31:0] out_DataMemory,
-                                output reg [4:0] out_RD,
+                                output reg [3:0] out_RD,
                                 output reg out_ID_RF_enable
                                
 );
