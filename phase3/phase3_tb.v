@@ -106,7 +106,7 @@ module PF3_ControlUnit_tb;
     end
     $fclose(fi);
     
-    $display("CLK|Keyword| PC|EX_opcode|EX_am|EX_s|EX_load|EX_rf_e|EX_size|EX_rw|EX_e|MEM_load|MEM_rf_e|MEM_size|MEM_rw|MEM_e|WB_rf_e        		Time");
+    $display("CLK|Keyword| PC|opcode|am|b|bl|s|load|rf_e|size|rw|e|EX_opcode|EX_am|EX_s|EX_load|EX_rf_e|EX_size|EX_rw|EX_e|MEM_load|MEM_rf_e|MEM_size|MEM_rw|MEM_e|WB_rf_e        		Time");
   end
   
   reg [8*6-1:0] keyword;
@@ -200,7 +200,7 @@ module PF3_ControlUnit_tb;
     if (S)
       keyword = {keyword, "S"};
     
-    if (CU_MUX_E == 1)
+    if (CU_MUX_E == 1 || I31_0[31:0] == 32'b0)
       keyword = "NOP";
   end
   
@@ -219,7 +219,7 @@ module PF3_ControlUnit_tb;
   join
 
     initial begin
-      $monitor("%b    %s %d      %b    %b    %b       %b       %b       %b     %b    %b        %b        %b        %b      %b     %b       %b%d", Clk, keyword, Q, EX_ALU_op, EX_AM, EX_S, EX_load_instr, EX_RF_enable, EX_size, EX_RW, EX_E, MEM_load_instr, MEM_RF_enable, MEM_Size, MEM_RW, MEM_E, out_ID_RF_enable, $time);
+      $monitor("%b    %s %d   %b %b %b  %b %b    %b    %b    %b  %b %b      %b    %b    %b       %b       %b       %b     %b    %b        %b        %b        %b      %b     %b       %b    %d", Clk, keyword, Q, ALU_op, AM, B_instr, BL_instr, S, load_instr, RF_enable, size, RW, E, EX_ALU_op, EX_AM, EX_S, EX_load_instr, EX_RF_enable, EX_size, EX_RW, EX_E, MEM_load_instr, MEM_RF_enable, MEM_Size, MEM_RW, MEM_E, out_ID_RF_enable, $time);
     end
 
 endmodule
