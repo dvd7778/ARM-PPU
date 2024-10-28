@@ -183,25 +183,26 @@ module CU_mux_2x1(
     //CU Signals
     input [3:0] ALU_op,
     input [1:0] AM,
-    input B_instr, BL_instr, load_instr, RF_enable, size, RW, E,
+    input B_instr, BL_instr, S,load_instr, RF_enable, size, RW, E,
     //NOP Signals
     input [3:0] NOP_ALU_op,
     input [1:0] NOP_AM,
-    input NOP_B_instr, NOP_BL_instr, NOP_load_instr, NOP_RF_enable, NOP_size, NOP_RW, NOP_E,
+    input NOP_B_instr, NOP_BL_instr, NOP_S ,NOP_load_instr, NOP_RF_enable, NOP_size, NOP_RW, NOP_E,
       
-      input S,
+      input mux_e,
   
     output reg [3:0] out_ALU_op,
     output reg [1:0] out_AM,
-    output reg out_B_instr, out_BL_instr, out_load_instr, out_RF_enable, out_size, out_RW, out_E
+    output reg out_B_instr, out_BL_instr, out_S ,out_load_instr, out_RF_enable, out_size, out_RW, out_E
   
 );
-  always @ (S, ALU_op, AM, B_instr, BL_instr, load_instr, RF_enable, size, RW, E) begin
-    if (S) begin
+  always @ (S, ALU_op, AM, B_instr, BL_instr, S, load_instr, RF_enable, size, RW, E) begin
+    if (!mux_e) begin
       out_ALU_op = ALU_op;
       out_AM = AM;
       out_B_instr = B_instr;
       out_BL_instr = BL_instr;
+      out_S = S;
       out_load_instr = load_instr;
       out_RF_enable = RF_enable;
       out_size = size;
@@ -213,6 +214,7 @@ module CU_mux_2x1(
       out_AM = NOP_AM;
       out_B_instr = NOP_B_instr;
       out_BL_instr = NOP_BL_instr;
+      out_S = NOP_S;
       out_load_instr = NOP_load_instr;
       out_RF_enable = NOP_RF_enable;
       out_size = NOP_size;
@@ -271,10 +273,10 @@ module Pipeline_Register_IF_ID (input [31:0] InstuctionMemoryOut,
 endmodule
 
 //Pipeline Register ID/EX
-module pipeline_register_ID_EX(
+module Pipeline_register_ID_EX(
   input clr,
   input clk,
-  input [31:0] next_pc_in,
+  input [7:0] next_pc_in,
   input [31:0] PA_in,
   input [31:0] PB_in,
   input [31:0] PD_in,
@@ -288,7 +290,7 @@ module pipeline_register_ID_EX(
   input ID_size,
   input ID_RW,
   input ID_E,
-  output reg [31:0] next_pc_out,
+  output reg [7:0] next_pc_out,
   output reg [31:0] PA_out,
   output reg [31:0] PB_out,
   output reg [31:0] PD_out,
@@ -318,8 +320,8 @@ module pipeline_register_ID_EX(
       EX_load_instr <= 0;
       EX_RF_enable <= 0;
       EX_size <= 0;
-        EX_RW <= 0;
-        EX_E <= 0;
+      EX_RW <= 0;
+      EX_E <= 0;
     end
     else begin
       next_pc_out <= next_pc_in;
@@ -334,34 +336,34 @@ module pipeline_register_ID_EX(
       EX_load_instr <= ID_load_instr;
       EX_RF_enable <= ID_RF_enable;
       EX_size <= ID_size;
-        EX_RW <= ID_RW;
-        EX_E <= ID_E;
+      EX_RW <= ID_RW;
+      EX_E <= ID_E;
     end
   end
 endmodule
 
 //Pipeline Register EX/MEM
-module Pipeline_Register_EX_MEM(output reg [31:0] Data_Mem_Out,
+module Pipeline_Register_EX_MEM(input [31:0] PD,
+                                input ALU_Out,
+                                input Z_Flag,
+                                input N_Flag,
+                                input C_Flag,
+                                input V_Flag,
+                                input [3:0]EX_RD,
+                                input EX_load_instr,
+                                input EX_RF_enable,
+                                input EX_Size,
+                                input EX_RW,
+                                input EX_E,
+                                input Clr, Clk,
+                                output reg [31:0] Data_Mem_Out,
                                 output reg [31:0] Data_Mem_Add_Out,
                                 output reg [3:0] RD_Out,
                                 output reg MEM_load_instr,
                                 output reg MEM_RF_enable,
                                 output reg MEM_Size,
                                 output reg MEM_RW,
-                                output reg MEM_E,
-                                input [31:0] PD,
-                                input ALU_Out,
-                                input Z_Flag,
-                                input N_Flag,
-                                input C_Flag,
-                                input V_Flag,
-                                input EX_RD,
-                                input EX_load_instr,
-                                input EX_RF_enable,
-                                input EX_Size,
-                                input EX_RW,
-                                input EX_E,
-                                input Clr, Clk);
+                                output reg MEM_E);
   
     always @ (posedge Clk, Clr) begin //rising edge triggered Register
         if (Clr) begin
