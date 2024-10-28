@@ -1,5 +1,3 @@
-// Code your testbench here
-// or browse Examples
 module PF3_ControlUnit_tb;
   
   //Register_PC
@@ -97,20 +95,113 @@ module PF3_ControlUnit_tb;
   
   Pipeline_Register_MEM_WB MEM_WB (32'b0, EX_RD_out, EX_RF_enable, Clr, Clk, out_DataMemory, out_WB_RD, out_ID_RF_enable);
   
-//   initial begin
-//     fi = $fopen("input.txt","r");
-//     A = 7'b0;
+  initial begin
+    fi = $fopen("input.txt","r");
     
-//     while(!$feof(fi))begin
-//       code = $fscanf(fi, "%b", data);
-//       rom.Mem[A] = data;
-//       A = A + 1;
-//       end
-//     $fclose(fi);
+    while(!$feof(fi)) begin
+      code = $fscanf(fi, "%b", data);
+      rom.Mem[Q] = data;
+    end
+    $fclose(fi);
     
-//     A = 0;
-//     $display("  A | I        |                 Time");
-//     end
+    $display("  PC | I        |                 Time");
+  end
+  
+  reg [8*6-1:0] keyword;
+  
+  
+  always @(posedge Clk) begin
+    if (BL_instr)
+      keyword = "BL";
+    else if (B_instr)
+      keyword = "B";
+    else if (load_instr) begin
+      if (I31_0[22])
+      	keyword = "LDRB";
+      else
+        keyword = "LDR";
+    end
+    else if (E == 1) begin
+      if (I31_0[22])
+      	keyword = "STRB";
+      else
+        keyword = "STR";
+    end
+    else begin
+      case (I31_0[24:21])
+        4'b0000:
+          keyword = "AND";
+        4'b0001:
+          keyword = "EOR";
+        4'b0010:
+          keyword = "SUB";
+        4'b0011:
+          keyword = "RSB";
+        4'b0100:
+          keyword = "ADD";
+        4'b0101:
+          keyword = "ADC";
+        4'b0110:
+          keyword = "SBC";
+        4'b0111:
+          keyword = "RSC";
+        4'b1000:
+          keyword = "TST";
+        4'b1001:
+          keyword = "TEQ";
+        4'b1010:
+          keyword = "CMP";
+        4'b1011:
+          keyword = "CMN";
+        4'b1100:
+          keyword = "ORR";
+        4'b1101:
+          keyword = "MOV";
+        4'b1110:
+          keyword = "BIC";
+        4'b1111:
+          keyword = "MVN";
+      endcase
+    end
+    
+    case (I31_0[31:28])
+      4'b0000:
+        keyword = {keyword, "EQ"};
+      4'b0001:
+        keyword = {keyword, "NE"};
+      4'b0010:
+        keyword = {keyword, "CS"};
+      4'b0011:
+        keyword = {keyword, "CC"};
+      4'b0100:
+        keyword = {keyword, "MI"};
+      4'b0101:
+        keyword = {keyword, "PL"};
+      4'b0110:
+        keyword = {keyword, "VS"};
+      4'b0111:
+        keyword = {keyword, "VC"};
+      4'b1000:
+        keyword = {keyword, "HI"};
+      4'b1001:
+        keyword = {keyword, "LS"};
+      4'b1010:
+        keyword = {keyword, "GE"};
+      4'b1011:
+        keyword = {keyword, "LT"};
+      4'b1100:
+        keyword = {keyword, "GT"};
+      4'b1101:
+        keyword = {keyword, "LE"};
+    endcase
+    
+    if (S)
+      keyword = {keyword, "S"};
+    
+    if (CU_MUX_E == 1)
+      keyword = "NOP";
+  end
+  
   
   initial #40 $finish;
 
@@ -126,7 +217,7 @@ module PF3_ControlUnit_tb;
   join
 
     initial begin
-      $monitor("%b %b %b %b %d", Clk, Clr, CU_MUX_E, LE, $time);
+      $monitor("%b %s %d %b %b %b %b %b %b %b %b %b %b %d", Clk, keyword, Q, ALU_op, AM, B_instr, BL_instr, S, load_instr, RF_enable, size, RW, E, $time);
     end
 
 endmodule
