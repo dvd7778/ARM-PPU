@@ -233,16 +233,18 @@ module Adder(
 endmodule
 
 //Pipeline Register IF/ID
-module Pipeline_Register_IF_ID (output reg [23:0] I23_0,
-                                output reg [31:0] output_NextPC,
+module Pipeline_Register_IF_ID (input [31:0] InstuctionMemoryOut,
+                                input [7:0] NextPC, 
+                                input  Clr, Clk, E,
+  								output reg [23:0] I23_0,
+                                output reg [7:0] output_NextPC,
                                 output reg [3:0] I19_16,
                                 output reg [3:0] I3_0,
                                 output reg [3:0] I15_12,
                                 output reg [3:0] I31_28,
                                 output reg [11:0] I11_0,
-                                output reg [31:0] I31_0, 
-                                input [31:0] InstuctionMemoryOut, NextPC, 
-                                input  Clr, Clk, E);
+                                output reg [31:0] I31_0 
+);
   
     always @ (posedge Clk, Clr) begin
         if (Clr) begin 
