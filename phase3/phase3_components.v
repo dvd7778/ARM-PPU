@@ -249,10 +249,10 @@ module Pipeline_Register_IF_ID (input [31:0] InstuctionMemoryOut,
                                 output reg [31:0] I31_0 
 );
   
-    always @ (posedge Clk, Clr) begin
+    always @ (posedge Clk) begin
         if (Clr) begin 
             I23_0 <= 24'b0; 
-            output_NextPC <= 32'b0; 
+            output_NextPC <= 8'b0; 
             I19_16 <= 4'b0; 
             I3_0 <= 4'b0; 
             I15_12 <= 4'b0; 
@@ -366,7 +366,7 @@ module Pipeline_Register_EX_MEM(input [31:0] PD,
                                 output reg MEM_RW,
                                 output reg MEM_E);
   
-    always @ (posedge Clk, Clr) begin //rising edge triggered Register
+    always @ (posedge Clk) begin //rising edge triggered Register
         if (Clr) begin
             Data_Mem_Out <= 32'b0;
             Data_Mem_Add_Out <= 32'b0;
