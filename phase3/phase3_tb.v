@@ -1,5 +1,5 @@
 module PF3_ControlUnit_tb;
-  
+  reg [8*6-1:0] keyword;
   //Register_PC
   reg LE, Clr, Clk;
   wire [7:0] Q;
@@ -109,10 +109,8 @@ module PF3_ControlUnit_tb;
     $display("CLK|Keyword| PC|opcode|am|b|bl|s|load|rf_e|size|rw|e|EX_opcode|EX_am|EX_s|EX_load|EX_rf_e|EX_size|EX_rw|EX_e|MEM_load|MEM_rf_e|MEM_size|MEM_rw|MEM_e|WB_rf_e        		Time");
   end
   
-  reg [8*6-1:0] keyword;
   
-  
-  always @(posedge Clk) begin
+  always @(ALU_op, AM, B_instr, BL_instr, S, load_instr, RF_enable, size, RW, E) begin
     if (BL_instr)
       keyword = "BL";
     else if (B_instr)
@@ -203,6 +201,7 @@ module PF3_ControlUnit_tb;
     if (CU_MUX_E == 1 || I31_0[31:0] == 32'b0)
       keyword = "NOP";
   end
+  
   
   
   initial #40 $finish;
