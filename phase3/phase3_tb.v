@@ -6,7 +6,7 @@ module PF3_ControlUnit_tb;
   
    //ROM
   integer fi, code;
-  reg [7:0]A;
+  reg [7:0]Address;
   wire [31:0]I;
   reg [31:0]data;
   
@@ -70,7 +70,7 @@ module PF3_ControlUnit_tb;
   
   //Pipeline Register MEM/WB
   wire [31:0] out_DataMemory;
-  wire [4:0] out_WB_RD;
+  wire [3:0] out_WB_RD;
   wire out_ID_RF_enable;
   
   //Instance 
@@ -98,13 +98,15 @@ module PF3_ControlUnit_tb;
   initial begin
     fi = $fopen("input.txt","r");
     
+    Address = 8'b0;
     while(!$feof(fi)) begin
       code = $fscanf(fi, "%b", data);
-      rom.Mem[Q] = data;
+      rom.Mem[Address] = data;
+      Address = Address + 1;
     end
     $fclose(fi);
     
-    $display("  PC | I        |                 Time");
+    $display("CLK|Keyword| PC|EX_opcode|EX_am|EX_s|EX_load|EX_rf_e|EX_size|EX_rw|EX_e|MEM_load|MEM_rf_e|MEM_size|MEM_rw|MEM_e|WB_rf_e        		Time");
   end
   
   reg [8*6-1:0] keyword;
@@ -210,14 +212,14 @@ module PF3_ControlUnit_tb;
     Clr = 1;
     LE = 1;
     CU_MUX_E = 0;
- 
+    
     repeat (20) #2 Clk = ~Clk;
     #3 Clr = 0;
     #32 CU_MUX_E = 1;
   join
 
     initial begin
-      $monitor("%b %s %d %b %b %b %b %b %b %b %b %b %b %d", Clk, keyword, Q, ALU_op, AM, B_instr, BL_instr, S, load_instr, RF_enable, size, RW, E, $time);
+      $monitor("%b    %s %d      %b    %b    %b       %b       %b       %b     %b    %b        %b        %b        %b      %b     %b       %b%d", Clk, keyword, Q, EX_ALU_op, EX_AM, EX_S, EX_load_instr, EX_RF_enable, EX_size, EX_RW, EX_E, MEM_load_instr, MEM_RF_enable, MEM_Size, MEM_RW, MEM_E, out_ID_RF_enable, $time);
     end
 
 endmodule
