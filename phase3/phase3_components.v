@@ -1,3 +1,5 @@
+// Code your design here
+// Code your design here
 module ROM(input[7:0]A, output reg[31:0]I);
   reg[7:0] Mem[0:255];
       
@@ -50,30 +52,54 @@ module control_unit(
       // data processing with shift
       3'b000: begin
         case (instr[24:21])
-          AND:
+          AND: begin
             ALU_op = 4'b0110;
-          EOR:
+            RF_enable = 1;
+          end
+          EOR: begin
             ALU_op = 4'b1000;
-          SUB:
+            RF_enable = 1;
+          end
+          SUB: begin
             ALU_op = 4'b0010;
-          RSB:
+            RF_enable = 1;
+          end
+          RSB: begin
             ALU_op = 4'b0100;
-          ADD:
+            RF_enable = 1;
+          end
+          ADD: begin
             ALU_op = 4'b0000;
-          ADC:
+            RF_enable = 1;
+          end
+          ADC: begin
             ALU_op = 4'b0001;
-          SBC:
+            RF_enable = 1;
+          end
+          SBC: begin
             ALU_op = 4'b0011;
-          RSC:
+            RF_enable = 1;
+          end
+          RSC: begin
             ALU_op = 4'b0101;
-          ORR:
+            RF_enable = 1;
+          end
+          ORR: begin
             ALU_op = 4'b0111;
-          MOV:
+            RF_enable = 1;
+          end
+          MOV: begin
             ALU_op = 4'b1010;
-          BIC:
+            RF_enable = 1;
+          end
+          BIC: begin
             ALU_op = 4'b1100;
-          MVN:
+            RF_enable = 1;
+          end
+          MVN: begin
             ALU_op = 4'b1011;
+            RF_enable = 1;
+          end
           default
             ALU_op = 4'b1001;
         endcase
@@ -84,30 +110,54 @@ module control_unit(
       // data processing no shift
       3'b001: begin
         case (instr[24:21])
-          AND:
+          AND: begin
             ALU_op = 4'b0110;
-          EOR:
+            RF_enable = 1;
+          end
+          EOR: begin
             ALU_op = 4'b1000;
-          SUB:
+            RF_enable = 1;
+          end
+          SUB: begin
             ALU_op = 4'b0010;
-          RSB:
+            RF_enable = 1;
+          end
+          RSB: begin
             ALU_op = 4'b0100;
-          ADD:
+            RF_enable = 1;
+          end
+          ADD: begin
             ALU_op = 4'b0000;
-          ADC:
+            RF_enable = 1;
+          end
+          ADC: begin
             ALU_op = 4'b0001;
-          SBC:
+            RF_enable = 1;
+          end
+          SBC: begin
             ALU_op = 4'b0011;
-          RSC:
+            RF_enable = 1;
+          end
+          RSC: begin
             ALU_op = 4'b0101;
-          ORR:
+            RF_enable = 1;
+          end
+          ORR: begin
             ALU_op = 4'b0111;
-          MOV:
+            RF_enable = 1;
+          end
+          MOV: begin
             ALU_op = 4'b1010;
-          BIC:
+            RF_enable = 1;
+          end
+          BIC: begin
             ALU_op = 4'b1100;
-          MVN:
+            RF_enable = 1;
+          end
+          MVN: begin
             ALU_op = 4'b1011;
+            RF_enable = 1;
+          end
           default:
             ALU_op = 4'b1001;
         endcase
@@ -126,7 +176,8 @@ module control_unit(
         size = instr[22];
         RW = !instr[20];
         E = 1;
-        RF_enable = 1;
+        if (instr[20])
+          RF_enable = 1;
        end
         
       // load and store
@@ -140,7 +191,8 @@ module control_unit(
         size = instr[22];
         RW = !instr[20];
         E = 1;
-        RF_enable = 1;
+        if (instr[20])
+          RF_enable = 1;
       end
         
       //  BL and B
