@@ -1,5 +1,3 @@
-// Code your design here
-// Code your design here
 module ROM(input[7:0]A, output reg[31:0]I);
   reg[7:0] Mem[0:255];
       
@@ -37,18 +35,19 @@ module control_unit(
   parameter MVN = 4'b1111;
 	
   always @(instr) begin
-    ALU_op = 4'b1001;
+    ALU_op = 4'b0000;
     B_instr = 0;
     BL_instr = 0;
-    AM = 2'b01; 
+    AM = 2'b00; 
     S = 0;
     RW = 0;
     load_instr = 0;
     RF_enable = 0;
     size = 0;
     E = 0;
-      
-    case (instr[27:25])
+    
+    if (instr[31:0] !== 32'b0) begin
+      case (instr[27:25])
       // data processing with shift
       3'b000: begin
         case (instr[24:21])
@@ -173,7 +172,7 @@ module control_unit(
           ALU_op = 4'b0010;
         AM = 2'b10;
         load_instr = instr[20];
-        size = instr[22];
+        size = ~instr[22];
         RW = !instr[20];
         E = 1;
         if (instr[20])
@@ -188,7 +187,7 @@ module control_unit(
           ALU_op = 4'b0010;
         AM = 2'b11;
         load_instr = instr[20];
-        size = instr[22];
+        size = ~instr[22];
         RW = !instr[20];
         E = 1;
         if (instr[20])
@@ -201,6 +200,7 @@ module control_unit(
         BL_instr = instr[24]; 
       end
     endcase
+    end
   end
 endmodule
 
