@@ -166,11 +166,42 @@ module Register_PC(
   
 endmodule
 
-module mux_2x1 (
+//Mux 2x1 32b
+module mux_2x1_32b (
     input S, 
     input [31:0] A, 
     input [31:0] B,
     output reg [31:0] Y
+);
+  
+  always @ (S, A, B) begin
+    if (S) Y = A;
+      else Y = B;
+  end
+  
+endmodule
+
+//Mux 2x1 8b
+module mux_2x1_8b (
+  input S, 
+  input [7:0] A, 
+  input [7:0] B,
+  output reg [7:0] Y
+);
+  
+  always @ (S, A, B) begin
+    if (S) Y = A;
+      else Y = B;
+  end
+  
+endmodule
+
+//Mux 2x1 4b
+module mux_2x1_4b (
+  input S, 
+  input [3:0] A, 
+  input [3:0] B,
+  output reg [3:0] Y
 );
   
   always @ (S, A, B) begin
@@ -535,7 +566,7 @@ module Three_port_register_file (
   Register Regs12 (R12, PW, O[12], Clk);
   Register Regs13 (R13, PW, O[13], Clk);
   Register Regs14 (R14, PW, O[14], Clk);
-  Register Regs15 (R15, PC, 1'b1, Clk);
+  Register Regs15 (R15, {24'b0,PC}, 1'b1, Clk);
 
   // Instantiate Multiplexers for outputs
   Multiplexer MuxA (PA, RA, R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15);
@@ -559,6 +590,7 @@ module mux_4x1 (
         2'b10: Y = C;
         2'b11: Y = D;
     endcase
-  
+  end
 endmodule
-
+    
+    

@@ -49,6 +49,15 @@ module PF3_ControlUnit_tb;
   // Adder TA
   wire [7:0] TA;
   
+  //Mux PA
+  wire [31:0] HFU_outPA;
+  
+  //Mux PB  
+  wire [31:0] HFU_outPB;
+  
+  //RD Mux Out
+  wire [3:0] RD_mux_out;
+  
   //Pipeline Register ID/EX
   wire [7:0] EX_next_pc_out;
   wire [31:0] EX_PA_out;
@@ -93,15 +102,15 @@ module PF3_ControlUnit_tb;
                                 I3_0, I15_12, I31_28, I11_0,
                                 I31_0);
   
-  Three_port_register_file RF(I19_16, I3_0, I15_12, 4'b0, 32'b0, Q, Clk, out_ID_RF_enable, PA, PB, PD)
+  Three_port_register_file RF(I19_16, I3_0, I15_12, 4'b0, 32'b0, Q, Clk, out_ID_RF_enable, PA, PB, PD);
   
-  mux_4x1 RF_muxPA (2'b0, 2'b0, 2'b0, 2'b0, PA, HFU_outPA)
+  mux_4x1 RF_muxPA (2'b0, 32'b0, 32'b0, 32'b0, PA, HFU_outPA);
   
-  mux_4x1 RF_muxPB (2'b0, 2'b0, 2'b0, 2'b0, PB, HFU_outPB)
+  mux_4x1 RF_muxPB (2'b0, 32'b0, 32'b0, 32'b0, PB, HFU_outPB);
   
-  mux_2x1 RD_mux (1'b0, I15_12, 4'b1110, RD_mux_out)
+  mux_2x1_4b RD_mux_4b (1'b0, I15_12, 4'b1110, RD_mux_out);
   
-  Adder adder_id([7:0]I23_0 * 4, output_NextPC, TA)
+  Adder adder_id(I23_0[7:0] * 8'b00000100, output_NextPC, TA);
   
   control_unit CU (I31_0, ALU_op, AM, B_instr, BL_instr, S, load_instr, RF_enable, size, RW, E);
  
