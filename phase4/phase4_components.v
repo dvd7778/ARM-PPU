@@ -6,6 +6,37 @@ module ROM(input[7:0]A, output reg[31:0]I);
   end
 endmodule
 
+module RAM(input[7:0]A, input [31:0]DI, input Size, input RW, input E, output reg[31:0]DO);
+  reg[7:0] Mem[0:255];
+      
+  always @(A, DI, Size, RW, E)
+   
+    if(RW == 0) begin//Read
+      case(Size)
+
+        1'b0: DO <= {24'b0, Mem[A]};//Byte
+
+        1'b1: DO <= {Mem[A], Mem[A+1], Mem[A+2], Mem[A+3]};//Word
+      endcase
+        end
+    else begin
+      if(E == 1)begin //Write
+        case(Size)
+
+          1'b0: Mem[A] <= DI[7:0];
+
+          1'b1: begin
+            Mem[A] <= DI[31:24];
+            Mem[A+1] <= DI[23:16];
+            Mem[A+2] <= DI[15:8];
+            Mem[A+3] <= DI[7:0];
+          end
+          endcase
+      end
+    end
+ 
+endmodule
+
 
 module control_unit(
   input [31:0] instr,
@@ -154,14 +185,31 @@ endmodule
 
 // Code your design here
 module Register_PC(
-  	input [7:0] D,
-    input LE, Clr, Clk,
-    output reg [7:0] Q
+   input [31:0] D,
+   input LE, Clr, Clk,
+   output reg [31:0] Q
 );
   
   always @ (posedge Clk) begin//rising edge triggered
     if (Clr) Q <= 8'b00000000;
     else if (LE) Q <= D;
+  end
+  
+endmodule
+
+module Register_PSR(
+    input S,
+  	input Z, N, C, V,
+  	output reg Z_out, N_out, C_out, V_out
+);
+  
+  always @ (S) begin
+    if (S) begin
+      Z_out = Z;
+      N_out = N;
+      C_out = C;
+      V_out = V;
+    end
   end
   
 endmodule
@@ -258,9 +306,9 @@ endmodule
 
 // Adder
 module Adder(
-  input [7:0] A,
-  input [7:0] B,
-  output reg [7:0] result
+  input [31:0] A,
+  input [31:0] B,
+  output reg [31:0] result
 );
   always @(A, B)
       result = A + B;
@@ -268,10 +316,10 @@ endmodule
 
 //Pipeline Register IF/ID
 module Pipeline_Register_IF_ID (input [31:0] InstuctionMemoryOut,
-                                input [7:0] NextPC, 
+                                input [31:0] NextPC, 
                                 input  Clr, Clk, E,
   								output reg [23:0] I23_0,
-                                output reg [7:0] output_NextPC,
+                                output reg [31:0] output_NextPC,
                                 output reg [3:0] I19_16,
                                 output reg [3:0] I3_0,
                                 output reg [3:0] I15_12,
@@ -308,7 +356,7 @@ endmodule
 module Pipeline_register_ID_EX(
   input clr,
   input clk,
-  input [7:0] next_pc_in,
+  input [31:0] next_pc_in,
   input [31:0] PA_in,
   input [31:0] PB_in,
   input [31:0] PD_in,
@@ -322,7 +370,7 @@ module Pipeline_register_ID_EX(
   input ID_size,
   input ID_RW,
   input ID_E,
-  output reg [7:0] next_pc_out,
+  output reg [31:0] next_pc_out,
   output reg [31:0] PA_out,
   output reg [31:0] PB_out,
   output reg [31:0] PD_out,
@@ -376,7 +424,7 @@ endmodule
 
 //Pipeline Register EX/MEM
 module Pipeline_Register_EX_MEM(input [31:0] PD,
-                                input ALU_Out,
+                                input [31:0]ALU_Out,
                                 input Z_Flag,
                                 input N_Flag,
                                 input C_Flag,
@@ -539,7 +587,7 @@ module Multiplexer (
 module Three_port_register_file (
   input [3:0] RA, RB, RD, RW,   // 4-bit registers
   input [31:0] PW,              // Write value
-  input [7:0] PC,              // PC value 
+  input [31:0] PC,              // PC value 
   input Clk, LE,                 // Clock and Load Enable
   output [31:0] PA, PB, PD     // Register output values
 );
@@ -566,7 +614,7 @@ module Three_port_register_file (
   Register Regs12 (R12, PW, O[12], Clk);
   Register Regs13 (R13, PW, O[13], Clk);
   Register Regs14 (R14, PW, O[14], Clk);
-  Register Regs15 (R15, {24'b0,PC}, 1'b1, Clk);
+  Register Regs15 (R15, PC, 1'b1, Clk);
 
   // Instantiate Multiplexers for outputs
   Multiplexer MuxA (PA, RA, R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15);
@@ -583,7 +631,7 @@ module mux_4x1 (
   output reg [31:0] Y
 );
   
-  always @(S, A, B, C, D, Y) begin
+  always @(S, A, B, C, D) begin
     case (S)
         2'b00: Y = A;
         2'b01: Y = B;
@@ -592,5 +640,98 @@ module mux_4x1 (
     endcase
   end
 endmodule
+ 
+module alu (input [31:0] A, B, input Cin, input [3:0] Op, 
+            output reg [31:0] Out, output reg Z, N, C, V);
+  
+  always @(A, B, Cin, Op) begin
+    case (Op)
+      4'b0000: begin
+        {C, Out} = A + B;
+        V = ~(A[31] ^ B[31]) & (A[31] ^ Out[31]);
+        end
+      4'b0001: begin
+        {C, Out} = A + B + Cin;
+        V = ~(A[31] ^ B[31]) & (A[31] ^ Out[31]);
+        end
+      4'b0010: begin
+        {C, Out} = A - B;
+        V = (A[31] ^ B[31]) & (A[31] ^ Out[31]);
+        end
+      4'b0011: begin
+        {C, Out} = A - B - Cin;
+        V = (A[31] ^ B[31]) & (A[31] ^ Out[31]);
+        end
+      4'b0100: begin
+        {C, Out} = B - A;
+        V = (B[31] ^ A[31]) & (B[31] ^ Out[31]);
+        end
+      4'b0101: begin
+        {C, Out} = B - A - Cin;
+        V = (B[31] ^ A[31]) & (B[31] ^ Out[31]);
+        end
+      4'b0110: begin
+        Out = A & B;
+        C = 0;
+        V = 0;
+        end
+      4'b0111: begin
+        Out = A | B;
+        C = 0;
+        V = 0;
+        end
+      4'b1000: begin 
+        Out = A ^ B;
+        C = 0;
+        V = 0;
+        end
+      4'b1001: begin
+        Out = A;
+        C = 0;
+        V = 0;
+        end
+      4'b1010: begin
+        Out = B;
+        C = 0;
+        V = 0;
+        end
+      4'b1011: begin
+        Out = ~B;
+        C = 0;
+        V = 0;
+        end
+      4'b1100: begin
+        Out = A & (~B);
+        C = 0;
+        V = 0;
+        end
+    endcase
     
+    if (Out == 0) Z = 1;
+    else Z = 0;
+
+    N = Out[31];
+  end
+endmodule
+
+module shifter (input [31:0] Rm, input [11:0] I, input [1:0] AM, 
+                output reg [31:0] N);
+  
+  always @(Rm, I, AM) begin
+    case(AM)
+      2'b00: N = ({24'h000, I[7:0]} >> (2 * I[11:8])) | ({24'h000, I[7:0]} << (32 - (2 * I[11:8])));
+      2'b01: N = Rm;
+      2'b10: N = {20'b00000000000000000000, I};
+      2'b11: begin
+        case (I[6:5])
+          2'b00: N = Rm << I[11:7]; 						   // LSL
+          2'b01: N = Rm >> I[11:7]; 					   	   // LSR
+          2'b10: N = Rm >>> I[11:7]; 						   // LSR
+          2'b11: N = (Rm >> I[11:7]) | (Rm << (32 - I[11:7])); // ROR
+        endcase
+      end
+    endcase
+  end
+endmodule
+
     
