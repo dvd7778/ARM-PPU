@@ -1,8 +1,8 @@
-module PF3_ControlUnit_tb;
+module PF4_ControlUnit_tb;
   
   //Register_PC
   reg LE, Clr, Clk;
-  wire [7:0] Q;
+  wire [31:0] Q;
   
    //ROM
   integer fi, code;
@@ -29,11 +29,11 @@ module PF3_ControlUnit_tb;
   wire CU_MUX_out_B_instr, CU_MUX_out_BL_instr, CU_MUX_out_S, CU_MUX_out_load_instr, CU_MUX_out_RF_enable, CU_MUX_out_size, CU_MUX_out_RW, CU_MUX_out_E;
   
   //Adder
-  wire [7:0] result;
+  wire [31:0] result;
   
   //Pipeline Register IF/ID
   wire [23:0] I23_0;
-  wire [7:0] output_NextPC;
+  wire [31:0] output_NextPC;
   wire [3:0] I19_16;
   wire [3:0] I3_0;
   wire [3:0] I15_12;
@@ -47,7 +47,7 @@ module PF3_ControlUnit_tb;
   wire [31:0] PD;
   
   // Adder TA
-  wire [7:0] TA;
+  wire [31:0] TA;
   
   //Mux PA
   wire [31:0] HFU_outPA;
@@ -59,7 +59,7 @@ module PF3_ControlUnit_tb;
   wire [3:0] RD_mux_out;
   
   //Pipeline Register ID/EX
-  wire [7:0] EX_next_pc_out;
+  wire [31:0] EX_next_pc_out;
   wire [31:0] EX_PA_out;
   wire [31:0] EX_PB_out;
   wire [31:0] EX_PD_out;
@@ -74,6 +74,19 @@ module PF3_ControlUnit_tb;
   wire EX_RW;
   wire EX_E;
   
+  //Shifter
+  wire [31:0]N;
+  
+  //PSR
+  wire PSR_Z_out, PSR_N_out, PSR_C_out, PSR_V_out;
+  
+  //Alu 
+  wire [31:0]Alu_out;
+  wire Alu_Z_out, Alu_N_out, Alu_C_out, Alu_V_out;
+	
+  //Alu_mux
+  wire [31:0]Alu_mux_out;
+  
   //Pipeline Register EX/MEM
   wire [31:0] Data_Mem_Out;
   wire [31:0] Data_Mem_Add_Out;
@@ -84,6 +97,11 @@ module PF3_ControlUnit_tb;
   wire MEM_RW;
   wire MEM_E;
   
+  //Data Memory
+  wire[31:0] DataMemory_out;
+  
+  //Data Memory Mux
+  wire[31:0] DataMemory_mux_out;
   
   //Pipeline Register MEM/WB
   wire [31:0] out_DataMemory;
@@ -93,9 +111,9 @@ module PF3_ControlUnit_tb;
   //Instance 
   Register_PC PC(result, LE, Clr, Clk, Q);
   
-  ROM rom(Q, I);
+  ROM rom(Q[7:0], I);
   
-  Adder adder_if(Q, 8'b00000100, result);
+  Adder adder_if(Q, 32'b00000000000000000000000000000100, result);
   
   Pipeline_Register_IF_ID IF_ID(I, result, Clr, Clk, LE,
                                 I23_0, output_NextPC, I19_16,
@@ -110,7 +128,7 @@ module PF3_ControlUnit_tb;
   
   mux_2x1_4b RD_mux_4b (1'b0, I15_12, 4'b1110, RD_mux_out);
   
-  Adder adder_id(I23_0[7:0] * 8'b00000100, output_NextPC, TA);
+  Adder adder_id({8'b0, I23_0} * 32'b00000000000000000000000000000100, output_NextPC, TA);
   
   control_unit CU (I31_0, ALU_op, AM, B_instr, BL_instr, S, load_instr, RF_enable, size, RW, E);
  
@@ -118,12 +136,24 @@ module PF3_ControlUnit_tb;
   
   Pipeline_register_ID_EX ID_EX(Clr, Clk, output_NextPC, HFU_outPA, HFU_outPB, PD, RD_mux_out, I11_0, CU_MUX_out_ALU_op, CU_MUX_out_AM, CU_MUX_out_S, CU_MUX_out_load_instr, CU_MUX_out_RF_enable, CU_MUX_out_size, CU_MUX_out_RW, CU_MUX_out_E, EX_next_pc_out, EX_PA_out, EX_PB_out, EX_PD_out, EX_RD_out, EX_immediate_out, EX_ALU_op, EX_AM, EX_S, EX_load_instr, EX_RF_enable, EX_size, EX_RW, EX_E);
   
-  Pipeline_Register_EX_MEM EX_MEM (32'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, EX_RD_out, EX_load_instr, EX_RF_enable, EX_size, EX_RW, EX_E, Clr, Clk, Data_Mem_Out, Data_Mem_Add_Out, RD_Out, MEM_load_instr, MEM_RF_enable, MEM_Size, MEM_RW, MEM_E);
+  shifter Shifter(EX_PB_out, EX_immediate_out, EX_AM, N);
   
-  Pipeline_Register_MEM_WB MEM_WB (32'b0, EX_RD_out, EX_RF_enable, Clr, Clk, out_DataMemory, out_WB_RD, out_ID_RF_enable);
+  Register_PSR PSR(EX_S, Alu_Z_out, Alu_N_out, Alu_C_out, Alu_V_out, PSR_Z_out, PSR_N_out, PSR_C_out, PSR_V_out);
+  
+  alu ALU(EX_PA_out, N, PSR_C_out, EX_ALU_op, Alu_out, Alu_Z_out, Alu_N_out, Alu_C_out, Alu_V_out);
+  
+  mux_2x1_32b ALU_mux(1'b0, EX_next_pc_out, Alu_out, Alu_mux_out);
+  
+  Pipeline_Register_EX_MEM EX_MEM (EX_PD_out, Alu_mux_out, Alu_Z_out, Alu_N_out, Alu_C_out, Alu_V_out, EX_RD_out, EX_load_instr, EX_RF_enable, EX_size, EX_RW, EX_E, Clr, Clk, Data_Mem_Out, Data_Mem_Add_Out, RD_Out, MEM_load_instr, MEM_RF_enable, MEM_Size, MEM_RW, MEM_E);
+  
+  RAM DataMemory(Data_Mem_Add_Out[7:0], Data_Mem_Out, MEM_Size, MEM_RW, MEM_E, DataMemory_out);
+  
+  mux_2x1_32b DataMemory_Mux(MEM_load_instr, DataMemory_out, Data_Mem_Add_Out, DataMemory_mux_out);
+  
+  Pipeline_Register_MEM_WB MEM_WB (DataMemory_mux_out, EX_RD_out, EX_RF_enable, Clr, Clk, out_DataMemory, out_WB_RD, out_ID_RF_enable);
   
   initial begin
-    fi = $fopen("text.txt","r");
+    fi = $fopen("input.txt","r");
     
     Address = 8'b0;
     while(!$feof(fi)) begin
