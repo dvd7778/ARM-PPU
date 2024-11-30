@@ -1,3 +1,147 @@
+// Condition Handler
+module condition_handler(
+input B_instr,
+input BL_instr,
+input Z, N, C, V,
+input I31_I28,
+output reg B,
+output reg BL)
+  
+  always (*) begin
+    B = 1'b0;
+    BL = 1'b0;
+    
+    case (I31_I28)
+      // EQ
+      4'b0000: begin 
+        if (Z && B_instr) begin
+          B = 1'b1;
+          if (BL_instr)
+            BL = 1'b1;
+        end
+      end
+      
+      // NE
+      4'b0001: begin 
+        if (!Z && B_instr) begin
+          B = 1'b1;
+          if (BL_instr)
+            BL = 1'b1;
+        end
+      end
+      
+      // CS / HS
+      4'b0010: begin 
+        if (C && B_instr) begin
+          B = 1'b1;
+          if (BL_instr)
+            BL = 1'b1;
+        end
+      end
+      
+      // CC / LO
+      4'b0011: begin 
+        if (!C && B_instr) begin
+          B = 1'b1;
+          if (BL_instr)
+            BL = 1'b1;
+        end
+      end
+      
+      // MI
+      4'b0100: begin 
+        if (N && B_instr) begin
+          B = 1'b1;
+          if (BL_instr)
+            BL = 1'b1;
+        end
+      end
+      
+      // PL
+      4'b0101: begin 
+        if (!N && B_instr) begin
+          B = 1'b1;
+          if (BL_instr)
+            BL = 1'b1;
+        end
+      end
+      
+      // VS
+      4'b0110: begin 
+        if (V && B_instr) begin
+          B = 1'b1;
+          if (BL_instr)
+            BL = 1'b1;
+        end
+      end
+      
+      // HI
+      4'b1000: begin 
+        if (C && !Z && B_instr) begin
+          B = 1'b1;
+          if (BL_instr)
+            BL = 1'b1;
+        end
+      end
+      
+      // LS
+      4'b1001: begin 
+        if ((!C || Z) && B_instr) begin
+          B = 1'b1;
+          if (BL_instr)
+            BL = 1'b1;
+        end
+      end
+      
+      // GE
+      4'b1010: begin 
+        if (N == V && B_instr) begin
+          B = 1'b1;
+          if (BL_instr)
+            BL = 1'b1;
+        end
+      end
+      
+      // LT
+      4'b1011: begin 
+        if (N != V && B_instr) begin
+          B = 1'b1;
+          if (BL_instr)
+            BL = 1'b1;
+        end
+      end
+      
+      // GT
+      4'b1100: begin 
+        if (!Z && N == V && B_instr) begin
+          B = 1'b1;
+          if (BL_instr)
+            BL = 1'b1;
+        end
+      end
+      
+      // LE
+      4'b1101: begin 
+        if ((Z || N != V) && B_instr) begin
+          B = 1'b1;
+          if (BL_instr)
+            BL = 1'b1;
+        end
+      end
+      
+      // AL
+      4'b1110: begin 
+        if (B_instr) begin
+          B = 1'b1;
+          if (BL_instr)
+            BL = 1'b1;
+        end
+      end
+      
+    endcase
+  end
+endmodule
+
 // Hazard Forwarding Unit Module
 module Hazard_Forwarding_unit (
   input EX_RF_enable, MEM_RF_enable, WB_RF_enable, EX_load_instr,
