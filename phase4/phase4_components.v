@@ -10,40 +10,39 @@ module Hazard_Forwarding_unit (
     PC_LE_enable = 1'b1;
     IFID_LE_enable = 1'b1;
     CU_mux_enable = 1'b1;
-     
     
-    if (EX_load_instr && ((ID_RS1 == EX_RD) || (ID_RS2 == EX_RD) || (ID_RD == EX_RD)))       begin
-      IF_ID_enable = 1'b0; 
-      ID_PC_enable = 1'b0; 
-      ID_nPC_enable = 1'b0; 
+    if (EX_load_instr && ((RA == EX_RD) || (RB == EX_RD))) begin
+      PC_LE_enable = 1'b0; 
+      IFID_LE_enable = 1'b0; 
+      CU_mux_enable = 1'b0; 
     end
 
     // Forwarding for First Operand (RS1)
-    if (EX_RF_enable && (ID_RS1 == EX_RD)) begin
-      S1_MUX = 2'b10; // Forward from EX stage
+    if (EX_RF_enable && (RA == EX_RD)) begin
+      S_MUX_PA = 2'b10; // Forward from EX stage
     end
-    else if (MEM_RF_enable && (ID_RS1 == MEM_RD)) begin
-      S1_MUX = 2'b11; // Forward from MEM stage
+    else if (MEM_RF_enable && (RA == MEM_RD)) begin
+      S_MUX_PA = 2'b11; // Forward from MEM stage
     end
-    else if (WB_RF_enable && (ID_RS1 == WB_RD)) begin
-      S1_MUX = 2'b01; // Forward from WB stage
+    else if (WB_RF_enable && (RA == WB_RD)) begin
+      S_MUX_PA = 2'b01; // Forward from WB stage
     end
     else begin
-      S1_MUX = 2'b00; // No forwarding
+      S_MUX_PA = 2'b00; // No forwarding
     end
 
     // Forwarding for Second Operand (RS2)
     if (EX_RF_enable && (ID_RS2 == EX_RD)) begin
-      S2_MUX = 2'b10; // Forward from EX stage
+      S_MUX_PB = 2'b10; // Forward from EX stage
     end
     else if (MEM_RF_enable && (ID_RS2 == MEM_RD)) begin
-      S2_MUX = 2'b11; // Forward from MEM stage
+      S_MUX_PB = 2'b11; // Forward from MEM stage
     end
     else if (WB_RF_enable && (ID_RS2 == WB_RD)) begin
-      S2_MUX = 2'b01; // Forward from WB stage
+      S_MUX_PB = 2'b01; // Forward from WB stage
     end
     else begin
-      S2_MUX = 2'b00; // No forwarding
+      S_MUX_PB = 2'b00; // No forwarding
     end
 
   end
