@@ -1,3 +1,53 @@
+// Hazard Forwarding Unit Module
+module Hazard_Forwarding_unit (
+  input EX_RF_enable, MEM_RF_enable, WB_RF_enable, EX_load_instr,
+  input [3:0] EX_RD, MEM_RD, WB_RD, RA, RB,
+  output reg [1:0] S_MUX_PA, S_MUX_PB,
+  output reg PC_LE_enable, IFID_LE_enable, CU_mux_enable 
+);
+  
+  always @(*) begin
+    PC_LE_enable = 1'b1;
+    IFID_LE_enable = 1'b1;
+    CU_mux_enable = 1'b1;
+    
+    if (EX_load_instr && ((RA == EX_RD) || (RB == EX_RD))) begin
+      PC_LE_enable = 1'b0; 
+      IFID_LE_enable = 1'b0; 
+      CU_mux_enable = 1'b0; 
+    end
+
+    // Forwarding for First Operand (RS1)
+    if (EX_RF_enable && (RA == EX_RD)) begin
+      S_MUX_PA = 2'b10; // Forward from EX stage
+    end
+    else if (MEM_RF_enable && (RA == MEM_RD)) begin
+      S_MUX_PA = 2'b11; // Forward from MEM stage
+    end
+    else if (WB_RF_enable && (RA == WB_RD)) begin
+      S_MUX_PA = 2'b01; // Forward from WB stage
+    end
+    else begin
+      S_MUX_PA = 2'b00; // No forwarding
+    end
+
+    // Forwarding for Second Operand (RS2)
+    if (EX_RF_enable && (RB == EX_RD)) begin
+      S_MUX_PB = 2'b10; // Forward from EX stage
+    end
+    else if (MEM_RF_enable && (RB == MEM_RD)) begin
+      S_MUX_PB = 2'b11; // Forward from MEM stage
+    end
+    else if (WB_RF_enable && (RB == WB_RD)) begin
+      S_MUX_PB = 2'b01; // Forward from WB stage
+    end
+    else begin
+      S_MUX_PB = 2'b00; // No forwarding
+    end
+
+  end
+endmodule
+
 // Condition Handler
 module condition_handler(
 input B_instr,
@@ -5,10 +55,10 @@ input BL_instr,
 input Z, N, C, V,
 input I31_I28,
 output reg B,
-output reg BL)
+  output reg BL);
   
-  always (*) begin
-    B = 1'b0;
+  always @(*) begin
+  	B = 1'b0;
     BL = 1'b0;
     
     case (I31_I28)
@@ -139,56 +189,6 @@ output reg BL)
       end
       
     endcase
-  end
-endmodule
-
-// Hazard Forwarding Unit Module
-module Hazard_Forwarding_unit (
-  input EX_RF_enable, MEM_RF_enable, WB_RF_enable, EX_load_instr,
-  input [3:0] EX_RD, MEM_RD, WB_RD, RA, RB,
-  output reg [1:0] S_MUX_PA, S_MUX_PB,
-  output reg PC_LE_enable, IFID_LE_enable, CU_mux_enable 
-);
-  
-  always@(*) begin
-    PC_LE_enable = 1'b1;
-    IFID_LE_enable = 1'b1;
-    CU_mux_enable = 1'b1;
-    
-    if (EX_load_instr && ((RA == EX_RD) || (RB == EX_RD))) begin
-      PC_LE_enable = 1'b0; 
-      IFID_LE_enable = 1'b0; 
-      CU_mux_enable = 1'b0; 
-    end
-
-    // Forwarding for First Operand (RS1)
-    if (EX_RF_enable && (RA == EX_RD)) begin
-      S_MUX_PA = 2'b10; // Forward from EX stage
-    end
-    else if (MEM_RF_enable && (RA == MEM_RD)) begin
-      S_MUX_PA = 2'b11; // Forward from MEM stage
-    end
-    else if (WB_RF_enable && (RA == WB_RD)) begin
-      S_MUX_PA = 2'b01; // Forward from WB stage
-    end
-    else begin
-      S_MUX_PA = 2'b00; // No forwarding
-    end
-
-    // Forwarding for Second Operand (RS2)
-    if (EX_RF_enable && (ID_RS2 == EX_RD)) begin
-      S_MUX_PB = 2'b10; // Forward from EX stage
-    end
-    else if (MEM_RF_enable && (ID_RS2 == MEM_RD)) begin
-      S_MUX_PB = 2'b11; // Forward from MEM stage
-    end
-    else if (WB_RF_enable && (ID_RS2 == WB_RD)) begin
-      S_MUX_PB = 2'b01; // Forward from WB stage
-    end
-    else begin
-      S_MUX_PB = 2'b00; // No forwarding
-    end
-
   end
 endmodule
 
